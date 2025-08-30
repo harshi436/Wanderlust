@@ -1,0 +1,230 @@
+<% layout("layouts/boilerplate.ejs") %>
+
+
+
+<div class="row row-cols-lg-3 row-cols-md-3 row-cols-sm-1 mt-3">
+  <% allListings.forEach(listing => { %>
+    <a href="/listings/<%= listing._id %>" class="listing-link">
+      <div class="card col listing-card" style="width:20rem">
+        <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image" style="height:20rem"/>
+        <div class="card-body">
+          <p class="card-text">
+            <b><%= listing.title %></b><br/>
+            &#8377;<%= listing.price.toLocaleString("en-IN") %> / night
+          </p>
+        </div>
+      </div>
+    </a>
+  <% }) %>
+</div>
+
+
+
+<!--
+now i understand why express automatically parses 
+
+Express routes only match the path, not the query string
+
+Example:
+
+app.get("/listings/indexes", (req, res) => {
+  console.log(req.query);
+});
+
+
+This route will match:
+
+/listings/indexes
+/listings/indexes?category=Mountains
+/listings/indexes?category=Beaches&price=200
+
+
+✅ Because /listings/indexes (the path) is the same in all of them.
+
+Express doesn’t care about what comes after ? for matching the route.
+
+2. What happens to the ?something=...
+
+Everything after ? is called the query string.
+
+Express automatically parses that part and stores it in req.query.
+
+So:
+
+/listings/indexes?category=Mountains
+
+
+becomes
+
+req.query = { category: "Mountains" }
+
+/listings/indexes?category=Beaches&price=200
+
+
+becomes
+
+req.query = { category: "Beaches", price: "200" }
+-->
+
+
+
+<!--
+http://localhost:8080/listings/indexes?category=Mountains
+http://localhost:8080 → domain + port
+
+/listings/indexes → route path
+
+?category=Mountains → query string
+
+🔹 How Express handles it
+Request comes in
+Express matches the route first.
+Example:
+
+js
+Copy code
+app.get("/listings/indexes", (req, res) => {
+  ...
+});
+✅ This matches because path is /listings/indexes.
+
+Query string parsing
+Express (internally uses Node’s querystring or qs library) parses everything after ?.
+
+?category=Mountains
+becomes:
+
+js
+Copy code
+
+-->
+
+
+<!--
+explanation 
+
+
+Let’s slow it down and break it carefully.
+
+That part of code:
+let query = {};
+if (category) {
+  query.category = category; // only fetch listings of that category
+}
+
+1. let query = {};
+
+This starts with an empty object.
+
+In MongoDB, an empty object {} means “no filter”, i.e., fetch all documents.
+
+Example:
+
+Listing.find({}) // fetch everything
+
+2. if (category) { query.category = category; }
+
+This checks if a category exists (from req.params.category).
+
+If it exists, we add a filter condition to query.
+
+Example cases:
+
+Case A: No category in URL
+
+👉 User visits:
+
+/listings/indexes
+
+
+category = undefined
+
+Code runs:
+
+let query = {}; // nothing added
+
+
+So Listing.find(query) becomes:
+
+Listing.find({}) // get ALL listings
+
+Case B: Category is given
+
+👉 User visits:
+
+/listings/indexes/Mountains
+
+
+category = "Mountains"
+
+Code runs:
+
+let query = {};            // start empty
+query.category = "Mountains"; // add filter
+
+
+Now query = { category: "Mountains" }
+
+So Listing.find(query) becomes:
+
+Listing.find({ category: "Mountains" }) // only Mountains listings
+
+⚡ Why is this important?
+
+Because it lets the same function handle both situations:
+
+With category → filter listings.
+
+Without category → show all listings.
+
+If you didn’t use this pattern, you’d need two separate functions:
+
+One for showing all listings.
+
+One for showing only filtered listings.
+
+This way, you don’t duplicate code ✅
+-->
+
+
+
+
+
+
+
+
+
+<!--
+
+
+this code is with req.params
+
+
+router.get("/indexes", wrapAsync(listingController.indexes));
+// Route with :category param
+router.get("/indexes/:category", wrapAsync(listingController.indexesByCategory));
+
+module.exports.indexesByCategory = async (req, res) => {
+  const { category } = req.params; // get category from URL params
+  console.log(category);
+
+  let query = {};
+  if (category) {
+    query.category = category; // only fetch listings of that category
+  }
+
+  const allListings = await Listing.find(query);
+  res.render("listings/indexes", { allListings, selectedCategory: category || "" });
+};
+
+
+<a href="/listings/indexes/Mountains">Mountains</a>
+<a href="/listings/indexes/Beaches">Beaches</a>
+<a href="/listings/indexes/Rooms">Rooms</a>
+<a href="/listings/indexes/Farms">Farms</a>
+
+
+
+url becomes frontend http://localhost:8080/listings/indexes/Mountains
+
+-->
