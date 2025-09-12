@@ -40,7 +40,28 @@ display:none;/*visibility:hidden means cheex jagah gher rahati woh gayab hojayeg
   margin-left: 3rem;
   display:flex;
   align-items:center ;
+  justify-content: center;
 
+}
+@media (max-width: 768px) {
+  #filters {
+    flex-wrap: nowrap;          /* prevent wrapping */
+    overflow-x: auto;           /* horizontal scroll */
+    -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+  }
+
+  .filter {
+    margin: 0 0.5rem;
+  }
+
+  .tax-toggle {
+    margin-left: 0.5rem;
+  }
+
+  /* Hide scrollbar in WebKit browsers */
+  #filters::-webkit-scrollbar {
+    display: none;
+  }
 }
   
 </style>
