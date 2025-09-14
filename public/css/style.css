@@ -11,7 +11,7 @@
 /*navbar*/
 .navbar{
     height:5rem;
-    background-color: aquamarine;
+    background-color:black;
   
 
 }
@@ -133,10 +133,3 @@ When you use flex-wrap: wrap, it allows the items to wrap onto the next line if 
 }
 */
 
-/*Map*/
-
-#map { 
-    
-    height: 400px;
-     width: 80vh;
-     }
